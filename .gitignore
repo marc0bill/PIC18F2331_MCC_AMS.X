@@ -1,0 +1,9 @@
+
+.gitattributes
+*.err
+*.lst
+Makefile
+*.xml
+*.mk
+*.properties
+*.bash
