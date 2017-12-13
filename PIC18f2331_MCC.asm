@@ -15,6 +15,7 @@ movlf MACRO Val, Reg
   movwf Reg
   endm
  
+ ; ligne ajouter
  
 add16 MACRO Val,Rslt
   movf Val,W
