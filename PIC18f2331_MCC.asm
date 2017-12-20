@@ -15,7 +15,6 @@ movlf MACRO Val, Reg
   movwf Reg
   endm
  
- ; ligne ajouter
  
 add16 MACRO Val,Rslt
   movf Val,W
@@ -216,37 +215,39 @@ IT_ADC
   MOVFF ADRESL, MCC_I
   btg LATB, 5
   ; Calcul de la vitesse avec le QIE
-  ;     Si overflow croissant : MCC.Vts = varQEI + POSCNT_MAX - MCC.QEI;
-  ;     Si overflow decroissant :  MCC.Vts = varQEI - POSCNT_MAX - MCC.QEI
+  ;     Si overflow croissant : MCC.Vts = MCC_QEI - (MCC_QEI_z-POSCNT_MAX);
+  ;     Si overflow decroissant :  MCC.Vts = MCC_QEI - (POSCNT_MAX + MCC_QEI_z)
   ;     Pas Overflow  : MCC.Vts = varQEI - MCC.QEI;
   
   movff POSCNTL, MCC_QEI
   movff POSCNTH, MCC_QEI+1
   
-  BTFSC MCC_FLAG, QEIUP
+  BTFSS MCC_FLAG, QEIUP
   BRA ADC_skipUP
   movlw POSCNT_MAX_L
-  addwf MCC_Vts, F
+  subwf MCC_QEI_z, F ; (f) - (W) -> dest
   movlw POSCNT_MAX_H
-  addwfc MCC_Vts+1, F
+  subwfb MCC_QEI_z+1, F
   bra ADC_skipDOWN
 ADC_skipUP
-  BTFSC MCC_FLAG, QEIDOWN
+  BTFSS MCC_FLAG, QEIDOWN
   BRA ADC_skipDOWN
   movlw POSCNT_MAX_L
-  subwf MCC_Vts, F ; (f) - (W) -> dest
+  addwf MCC_QEI_z, F ; (f) - (W) -> dest
   movlw POSCNT_MAX_H
-  subwfb MCC_Vts+1, F ; (f) - (W) -> dest
+  subwfb MCC_QEI_z+1, F ; (f) - (W) -> dest
 ADC_skipDOWN
-  movf MCC_QEI, W
-  subwf MCC_Vts, F ; (f) - (W) -> dest
-  movf MCC_QEI+1, W
-  subwfb MCC_Vts+1, F
+  movf MCC_QEI_z, W
+  subwf MCC_QEI, W ; (f) - (W) -> dest
+  movwf MCC_Vts
+  movf MCC_QEI_z+1, W
+  subwfb MCC_QEI+1, W
+  movwf MCC_Vts+1
 ;  BZ ADC_next
 ;  movff MCC_Vts_z, MCC_Vts ; si MCC_Vts+1 n'est pas null : valeur invalide ...
 ADC_next
-  movff MCC_Vts, MCC_QEI
-  movff MCC_Vts+1, MCC_QEI+1
+  movff MCC_QEI, MCC_QEI_z
+  movff MCC_QEI+1, MCC_QEI_z+1
   bcf MCC_FLAG, QEIUP
   bcf MCC_FLAG, QEIDOWN
   
@@ -387,7 +388,7 @@ main
     BSF DFLTCON, FLT1EN	; Enabled Noise Filter Output on INDX input
     BCF DFLTCON, FLTCK2	; Noise Filter Clock Divider Ratio bits
     BSF DFLTCON, FLTCK1 ; 011 = 1:16
-    BSF DFLTCON, FLTCK0
+    BSF DFLTCON, FLTCK0 ; 100 = 1:32
     BSF IPR3, IC2QEIP	; High priority : QEI Interrupt
     BSF PIE3, IC2QEIE	; Enables QEI Interrupt
 ; ---------------------
@@ -429,10 +430,10 @@ main
     CLRF MCC_QEIH
     CLRF MCC_Pst
     CLRF MCC_Pst+1
-    movlf 250, MCC_DutyCycle
-    CLRF MCC_DutyCycle+1
-    ;movlf PMW_DCmax, MCC_DutyCycle
-    ;movlf PMW_DCmax_H, MCC_DutyCycle+1
+    ;movlf 250, MCC_DutyCycle
+    ;CLRF MCC_DutyCycle+1
+    movlf PMW_DCmax, MCC_DutyCycle
+    movlf PMW_DCmax_H, MCC_DutyCycle+1
     
     
     CLRF Corr_eI_z
