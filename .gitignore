@@ -7,3 +7,5 @@ Makefile
 *.mk
 *.properties
 *.bash
+build/default/
+dist/default/

@@ -5,7 +5,7 @@
 ;******************************************************************************
   LIST p=18f2331,f=INHX32,r=DEC; Definition du microcontroleur
   #include<p18f2331.inc>       ; Fichier include
-  CONFIG OSC = HSPLL,  DEBUG = ON, WDTEN=OFF, LVP = OFF ; PLL enable => 40MHz
+  CONFIG OSC = HSPLL,  DEBUG = OFF, WDTEN=OFF, LVP = OFF ; PLL enable => 40MHz
 
 ;******************************************************************************
 ;  DEFINITION DE SYMBOLES ET MACRO
@@ -302,7 +302,7 @@ main
     BSF TRISC, TRISC7	;
     BSF BAUDCON, BRG16	; 16-bit
     CLRF SPBRGH
-    movlf SPBRGVal, SPBRG 	; 115k2 Baud
+    movlf SPBRGVal, SPBRG 	; 
     movlf 0x24, TXSTA 	; 8-bit, Transmission enabled, High Speed
     BSF TXSTA, TXEN	;
     BSF RCSTA, CREN	; Enable Reception
